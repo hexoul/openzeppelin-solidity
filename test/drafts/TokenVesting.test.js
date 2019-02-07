@@ -1,7 +1,7 @@
 const { BN, constants, expectEvent, shouldFail, time } = require('openzeppelin-test-helpers');
 const { ZERO_ADDRESS } = constants;
 
-const ERC20Mintable = artifacts.require('ERC20Mintable');
+const ERC20Withdrawable = artifacts.require('ERC20Withdrawable');
 const TokenVesting = artifacts.require('TokenVesting');
 
 contract('TokenVesting', function ([_, owner, beneficiary]) {
@@ -52,8 +52,8 @@ contract('TokenVesting', function ([_, owner, beneficiary]) {
       this.vesting = await TokenVesting.new(
         beneficiary, this.start, this.cliffDuration, this.duration, true, { from: owner });
 
-      this.token = await ERC20Mintable.new({ from: owner });
-      await this.token.mint(this.vesting.address, amount, { from: owner });
+      this.token = await ERC20Withdrawable.new({ from: owner });
+      await this.token.mint(this.vesting.address, { from: owner, value: amount });
     });
 
     it('can get state', async function () {
