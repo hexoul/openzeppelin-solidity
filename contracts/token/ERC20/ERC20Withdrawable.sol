@@ -17,4 +17,15 @@ contract ERC20Withdrawable is ERC20, MinterRole {
         _mint(to, msg.value);
         return true;
     }
+
+    /**
+     * @dev Function to witdhraw ether from token.
+     * @param value The amount of tokens to withdraw.
+     * @return A boolean that indicates if the operation was successful.
+     */
+    function withdraw(uint256 value) public returns (bool) {
+        _burn(msg.sender, value);
+        msg.sender.transfer(value);
+        return true;
+    }
 }

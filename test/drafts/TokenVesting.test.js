@@ -1,11 +1,11 @@
-const { BN, constants, expectEvent, shouldFail, time } = require('openzeppelin-test-helpers');
+const { balance, BN, constants, expectEvent, shouldFail, time } = require('openzeppelin-test-helpers');
 const { ZERO_ADDRESS } = constants;
 
 const ERC20Withdrawable = artifacts.require('ERC20Withdrawable');
 const TokenVesting = artifacts.require('TokenVesting');
 
 contract('TokenVesting', function ([_, owner, beneficiary]) {
-  const amount = new BN('1000');
+  const amount = new BN('10000000000000000');
 
   beforeEach(async function () {
     // +1 minute so it starts after contract instantiation
@@ -66,15 +66,21 @@ contract('TokenVesting', function ([_, owner, beneficiary]) {
 
     it('cannot be released before cliff', async function () {
       await shouldFail.reverting(this.vesting.release(this.token.address));
+      await shouldFail.reverting(this.token.withdraw(new BN('1'), { from: beneficiary }));
     });
 
     it('can be released after cliff', async function () {
       await time.increaseTo(this.start.add(this.cliffDuration).add(time.duration.weeks(1)));
       const { logs } = await this.vesting.release(this.token.address);
+      const withdrawable = await this.token.balanceOf(beneficiary);
       expectEvent.inLogs(logs, 'TokensReleased', {
         token: this.token.address,
-        amount: await this.token.balanceOf(beneficiary),
+        amount: withdrawable,
       });
+
+      (await balance.difference(beneficiary, () =>
+        this.token.withdraw(withdrawable, { from: beneficiary }))
+      ).should.be.bignumber.gt(new BN(0));
     });
 
     it('should release proper amount after cliff', async function () {
